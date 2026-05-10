@@ -3,13 +3,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 const STORAGE_KEY = 'campusfit.v3.locale'
 
 function detectInitial() {
-  if (typeof navigator === 'undefined') return 'en'
+  // Default to Chinese for new visitors. Respect an explicit prior pick.
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored === 'en' || stored === 'zh') return stored
   } catch {}
-  const lang = (navigator.language || 'en').toLowerCase()
-  return lang.startsWith('zh') ? 'zh' : 'en'
+  return 'zh'
 }
 
 function interpolate(str, vars) {
