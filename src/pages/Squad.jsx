@@ -23,6 +23,19 @@ export function Squad() {
   const todayCount = squad.members.filter((m) => m.todayVerified).length
   const squadName = t(`squad.name.${squad.nameKey || 'dorm304'}`)
 
+  const handleInvite = async () => {
+    try {
+      await navigator.clipboard?.writeText(squad.inviteCode)
+    } catch (error) {
+      void error
+    }
+    toast.push({
+      title: t('squad.invite.toast.title'),
+      body: t('squad.invite.toast.body', { code: squad.inviteCode }),
+      icon: '+',
+    })
+  }
+
   const handleHighFive = (m) => {
     if (!m.todayVerified || m.isYou) return
     actions.highFive(m.id)
@@ -165,7 +178,11 @@ export function Squad() {
         </ul>
 
         {squad.members.length < 6 && (
-          <button className="font-display stamp-press mt-3 flex w-full items-center justify-center gap-2 border-2 border-dashed border-ink/40 bg-paper py-3 text-[14px] font-black uppercase tracking-[0.12em] text-ink/65">
+          <button
+            type="button"
+            onClick={handleInvite}
+            className="font-display stamp-press mt-3 flex w-full items-center justify-center gap-2 border-2 border-dashed border-ink/40 bg-paper py-3 text-[14px] font-black uppercase tracking-[0.12em] text-ink/65"
+          >
             {t('squad.invite')}
           </button>
         )}

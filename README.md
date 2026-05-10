@@ -19,7 +19,7 @@ npm run dev
 - **02** 重置为已激活的 demo 用户（默认状态）
 - **03** 手动触发 "Lily 刚完成今日任务" 推送
 
-中文模式会自动加载 Noto Sans SC，CJK 字符走思源黑，ASCII 数字/任务编号继续走 Big Shoulders。语言偏好持久化在 `localStorage` 的 `campusfit.v3.locale` 键。
+中文模式会自动加载 Noto Sans SC，CJK 字符走思源黑，ASCII 数字/任务编号继续走 Big Shoulders。语言偏好持久化在 `localStorage` 的 `campusfit.v4.locale` 键。
 
 ## 5 个页面
 

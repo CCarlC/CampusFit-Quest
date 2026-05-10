@@ -32,16 +32,7 @@ function Shell() {
   const [tab, setTab] = useState('home')
   const [forceOnboarding, setForceOnboarding] = useState(false)
   const [pushVisible, setPushVisible] = useState(null)
-  const [unlockQueue, setUnlockQueue] = useState([])
-
-  // Watch for newly unlocked badges & queue them.
-  useEffect(() => {
-    const newly = state._justUnlocked
-    if (newly && newly.length) {
-      setUnlockQueue((q) => [...q, ...newly])
-      actions.clearJustUnlocked()
-    }
-  }, [state._justUnlocked, actions])
+  const currentUnlock = state._justUnlocked?.[0] ?? null
 
   const inOnboarding = forceOnboarding || !state.user.onboarded
 
@@ -86,8 +77,8 @@ function Shell() {
       <BottomNav active={tab} onChange={setTab} />
 
       <BadgeUnlockModal
-        badge={unlockQueue[0]}
-        onClose={() => setUnlockQueue((q) => q.slice(1))}
+        badge={currentUnlock}
+        onClose={actions.dismissJustUnlocked}
       />
 
       <DemoConsole

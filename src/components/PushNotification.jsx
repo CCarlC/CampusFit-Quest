@@ -7,15 +7,14 @@ import { useI18n } from '../lib/i18n.jsx'
 // Used to mock the "Lily just verified" push that re-engages the user.
 export function PushNotification({ push, onDismiss }) {
   const { t } = useI18n()
-  const [visible, setVisible] = useState(false)
+  const [dismissedPush, setDismissedPush] = useState(null)
+  const visible = !!push && dismissedPush !== push
 
   useEffect(() => {
-    if (push) {
-      setVisible(true)
-      const t = setTimeout(() => setVisible(false), 5800)
-      return () => clearTimeout(t)
-    }
-  }, [push])
+    if (!visible) return
+    const timer = setTimeout(() => setDismissedPush(push), 5800)
+    return () => clearTimeout(timer)
+  }, [push, visible])
 
   return (
     <AnimatePresence onExitComplete={() => onDismiss?.()}>
@@ -26,7 +25,7 @@ export function PushNotification({ push, onDismiss }) {
           exit={{ y: -110, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
           className="pointer-events-auto fixed inset-x-0 top-2 z-[55] mx-auto max-w-[420px] px-3"
-          onClick={() => setVisible(false)}
+          onClick={() => setDismissedPush(push)}
         >
           <div
             className="relative grid grid-cols-[auto_1fr_auto] items-center gap-3 overflow-hidden border border-ink/15 bg-ink/85 px-3 py-2 text-cream backdrop-blur-md"

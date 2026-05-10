@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { motion } from 'motion/react'
 import { useStore } from '../lib/store.jsx'
 import { useI18n } from '../lib/i18n.jsx'
@@ -19,7 +20,9 @@ export function Quests() {
   const { t } = useI18n()
   const toast = useToast()
   const { quests, user } = state
-  const visible = quests.filter((q) => !(q.locked && !user.streakPaused))
+  const [filter, setFilter] = useState('all')
+  const available = quests.filter((q) => !(q.locked && !user.streakPaused))
+  const visible = filter === 'all' ? available : available.filter((q) => q.type === filter)
 
   const handleVerified = (q) => ({ steps, minutes }) => {
     actions.verifyTask(q.id, { mockSteps: steps, mockMinutes: minutes })
@@ -46,12 +49,14 @@ export function Quests() {
 
       {/* Type filter strip */}
       <div className="no-scrollbar flex gap-2 overflow-x-auto border-b-2 border-ink bg-cream px-4 py-2.5">
-        <Chip active>{t('quests.chip.all', { n: visible.length })}</Chip>
+        <Chip active={filter === 'all'} onClick={() => setFilter('all')}>
+          {t('quests.chip.all', { n: available.length })}
+        </Chip>
         {Object.entries(TYPE_META).map(([k, v]) => {
-          const count = visible.filter((q) => q.type === k).length
+          const count = available.filter((q) => q.type === k).length
           if (count === 0) return null
           return (
-            <Chip key={k} dotColor={v.accent}>
+            <Chip key={k} active={filter === k} dotColor={v.accent} onClick={() => setFilter(k)}>
               {t(`quests.type.${k}`)} · {count}
             </Chip>
           )
@@ -85,10 +90,11 @@ export function Quests() {
   )
 }
 
-function Chip({ children, active = false, dotColor }) {
+function Chip({ children, active = false, dotColor, onClick }) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className={[
         'font-mono inline-flex shrink-0 items-center gap-1.5 border px-2.5 py-1 text-[10px] tracking-[0.18em] uppercase',
         active ? 'border-ink bg-ink text-jersey' : 'border-ink/35 bg-paper text-ink/70',

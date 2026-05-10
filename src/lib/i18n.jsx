@@ -1,14 +1,17 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
-const STORAGE_KEY = 'campusfit.v3.locale'
+const STORAGE_KEY = 'campusfit.v4.locale'
+const DEFAULT_LOCALE = 'zh'
 
 function detectInitial() {
   // Default to Chinese for new visitors. Respect an explicit prior pick.
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored === 'en' || stored === 'zh') return stored
-  } catch {}
-  return 'zh'
+  } catch (error) {
+    void error
+  }
+  return DEFAULT_LOCALE
 }
 
 function interpolate(str, vars) {
@@ -22,7 +25,7 @@ export function I18nProvider({ children }) {
   const [locale, setLocaleState] = useState(detectInitial)
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, locale) } catch {}
+    try { localStorage.setItem(STORAGE_KEY, locale) } catch (error) { void error }
     if (typeof document !== 'undefined') {
       document.documentElement.lang = locale === 'zh' ? 'zh-CN' : 'en'
       document.documentElement.dataset.locale = locale
@@ -281,6 +284,8 @@ const DICT = {
   'squad.nudge': { en: 'NUDGE', zh: '催一下' },
   'squad.nudgeDisabled': { en: 'DISABLED · BY DESIGN', zh: '已禁用 · 设计如此' },
   'squad.invite': { en: '＋ INVITE — UP TO 6', zh: '＋ 邀请 — 最多 6 人' },
+  'squad.invite.toast.title': { en: 'INVITE CODE READY', zh: '邀请码已就绪' },
+  'squad.invite.toast.body': { en: 'Share {code} with a squadmate.', zh: '把 {code} 发给队友即可加入。' },
   'squad.note.tag': { en: '// V3 DESIGN NOTE · SOCIAL PRESSURE', zh: '// V3 设计笔记 · 社交压力' },
   'squad.note.body': { en: 'High-fives only fire on verified members. We removed "Nudge" on unfinished squadmates — passive-aggressive notifications were the #1 reason V1 testers said the squad felt "guilty."', zh: '击掌仅发给已校验成员。我们移除了对未完成成员的「催一下」按钮——被动攻击式通知是 V1 测试中「小队让人有负罪感」的头号原因。' },
   'squad.dropToSolo': { en: '// demo · drop to solo mode', zh: '// 示例 · 切回单人模式' },

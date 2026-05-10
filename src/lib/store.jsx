@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react'
-import { ACHIEVEMENT_LIBRARY, QUEST_LIBRARY, buildDemoState, buildFreshState } from './seed.js'
+import { buildDemoState, buildFreshState } from './seed.js'
 
 const STORAGE_KEY = 'campusfit.v3.state'
 
@@ -18,7 +18,9 @@ function load() {
 function persist(state) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch {}
+  } catch (error) {
+    void error
+  }
 }
 
 function deriveLevel(xp) {
@@ -34,32 +36,26 @@ function checkAchievements(state) {
   const newly = []
   const next = state.achievements.map((a) => {
     if (a.unlocked) return a
-    let pass = false
-    switch (a.id) {
+    const pass = (() => {
+      switch (a.id) {
       case 'first-sweat':
-        pass = u.completedTasks >= 1
-        break
+        return u.completedTasks >= 1
       case 'three-day-streak':
-        pass = u.streak >= 3
-        break
+        return u.streak >= 3
       case 'campus-runner':
-        pass = u.weeklyMinutes >= 100
-        break
+        return u.weeklyMinutes >= 100
       case 'gym-rookie':
-        pass = u.completedTasks >= 5
-        break
+        return u.completedTasks >= 5
       case 'squad-player':
-        pass = u.socialCompleted >= 1
-        break
+        return u.socialCompleted >= 1
       case 'squad-first-together':
-        pass = !!state.squad && state.squad.members.every((m) => m.todayVerified)
-        break
+        return !!state.squad && state.squad.members.every((m) => m.todayVerified)
       case 'night-owl':
-        pass = !!state.squad && (state.squad.nightTogetherCount ?? 0) >= 1
-        break
+        return !!state.squad && (state.squad.nightTogetherCount ?? 0) >= 1
       default:
-        pass = false
-    }
+        return false
+      }
+    })()
     if (pass) {
       newly.push({ ...a, unlocked: true, unlockedAt: new Date().toISOString() })
       return { ...a, unlocked: true, unlockedAt: new Date().toISOString() }
@@ -190,6 +186,9 @@ function reducer(state, action) {
     case 'CLEAR_JUST_UNLOCKED':
       return { ...state, _justUnlocked: [] }
 
+    case 'DISMISS_JUST_UNLOCKED':
+      return { ...state, _justUnlocked: state._justUnlocked?.slice(1) ?? [] }
+
     case 'CLEAR_DOT':
       return {
         ...state,
@@ -252,6 +251,7 @@ export function StoreProvider({ children }) {
           mockMinutes: opts.mockMinutes,
         }),
       clearJustUnlocked: () => dispatch({ type: 'CLEAR_JUST_UNLOCKED' }),
+      dismissJustUnlocked: () => dispatch({ type: 'DISMISS_JUST_UNLOCKED' }),
       clearDot: (tab) => dispatch({ type: 'CLEAR_DOT', tab }),
       markPushShown: () => dispatch({ type: 'PUSH_SHOWN' }),
       highFive: (memberId) => dispatch({ type: 'HIGH_FIVE', memberId }),
