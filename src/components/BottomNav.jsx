@@ -1,15 +1,17 @@
 import { useStore } from '../lib/store.jsx'
+import { useI18n } from '../lib/i18n.jsx'
 
 const TABS = [
-  { id: 'home', label: 'HOME', glyph: 'H' },
-  { id: 'quests', label: 'QUESTS', glyph: 'Q' },
-  { id: 'squad', label: 'SQUAD', glyph: 'S' },
-  { id: 'achievements', label: 'BADGES', glyph: 'B' },
-  { id: 'leaderboard', label: 'RANKS', glyph: 'R' },
+  { id: 'home', i18n: 'nav.home', glyph: 'H' },
+  { id: 'quests', i18n: 'nav.quests', glyph: 'Q' },
+  { id: 'squad', i18n: 'nav.squad', glyph: 'S' },
+  { id: 'achievements', i18n: 'nav.badges', glyph: 'B' },
+  { id: 'leaderboard', i18n: 'nav.ranks', glyph: 'R' },
 ]
 
 export function BottomNav({ active, onChange }) {
   const { state, actions } = useStore()
+  const { t } = useI18n()
   const dots = state.lifecycle.newDots
 
   return (
@@ -42,7 +44,7 @@ export function BottomNav({ active, onChange }) {
                 >
                   {tab.glyph}
                 </span>
-                <span className="font-mono text-[9px] font-bold tracking-[0.18em]">{tab.label}</span>
+                <span className="font-mono text-[9px] font-bold tracking-[0.18em]">{t(tab.i18n)}</span>
                 {showDot && (
                   <span className="animate-red-dot absolute right-3 top-1.5 h-2 w-2 bg-jersey-deep" style={{ borderRadius: '50%' }} />
                 )}

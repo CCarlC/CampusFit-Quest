@@ -1,6 +1,9 @@
+import { useI18n } from '../lib/i18n.jsx'
+
 // Phone-frame wrapper: gives the demo a clear mobile silhouette on desktop while
 // staying full-bleed on actual mobile.
 export function PhoneFrame({ children }) {
+  const { t } = useI18n()
   return (
     <div className="relative min-h-svh w-full bg-ink">
       {/* Decorative wallpaper for desktop preview only */}
@@ -19,14 +22,7 @@ export function PhoneFrame({ children }) {
           <div className="font-mono animate-ticker flex gap-10 whitespace-nowrap px-4 text-[10px] tracking-[0.3em]">
             {Array.from({ length: 2 }).map((_, k) => (
               <div key={k} className="flex items-center gap-10">
-                <span>EST. 2026 — DORM 304 ATHLETIC ASSOCIATION</span>
-                <span>·</span>
-                <span>VERIFIED BY HEALTHKIT</span>
-                <span>·</span>
-                <span>NO SELF-REPORT, NO CHEAT</span>
-                <span>·</span>
-                <span>THE STREAK CONTINUES</span>
-                <span>·</span>
+                <span>{t('brand.tickerLine')}</span>
               </div>
             ))}
           </div>

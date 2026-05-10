@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Avatar } from './Avatar.jsx'
+import { useI18n } from '../lib/i18n.jsx'
 
 // iOS-style push banner — slides down from top status bar.
 // Used to mock the "Lily just verified" push that re-engages the user.
 export function PushNotification({ push, onDismiss }) {
+  const { t } = useI18n()
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -33,14 +35,14 @@ export function PushNotification({ push, onDismiss }) {
             <Avatar name={push.icon} color={push.color || 'jersey'} size={32} />
             <div className="min-w-0">
               <div className="flex items-baseline gap-1.5 text-[12px] font-semibold leading-none">
-                <span>CampusFit Quest</span>
-                <span className="font-mono text-[9px] tracking-[0.18em] text-cream/50">· now</span>
+                <span>{t('push.appName')}</span>
+                <span className="font-mono text-[9px] tracking-[0.18em] text-cream/50">{t('push.now')}</span>
               </div>
               <div className="mt-1 truncate text-[13px] leading-tight text-cream/90">
                 <b className="font-semibold">{push.from}</b> {push.body}
               </div>
             </div>
-            <span className="font-mono text-[9px] tracking-[0.2em] text-cream/40">DORM {push.dorm}</span>
+            <span className="font-mono text-[9px] tracking-[0.2em] text-cream/40">{t('push.dorm', { dorm: push.dorm })}</span>
           </div>
         </motion.div>
       )}

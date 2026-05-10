@@ -1,8 +1,10 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect } from 'react'
 import { Avatar } from './Avatar.jsx'
+import { useI18n } from '../lib/i18n.jsx'
 
 export function BadgeUnlockModal({ badge, onClose }) {
+  const { t } = useI18n()
   useEffect(() => {
     if (!badge) return
     const t = setTimeout(() => onClose?.(), 4200)
@@ -35,7 +37,7 @@ export function BadgeUnlockModal({ badge, onClose }) {
           >
             <div className="relative h-2 stripe-tape" />
             <div className="relative px-5 pb-5 pt-4">
-              <div className="font-mono text-center text-[10px] tracking-[0.2em] text-oxblood">// BADGE UNLOCKED</div>
+              <div className="font-mono text-center text-[10px] tracking-[0.2em] text-oxblood">{t('modal.unlocked')}</div>
               <div className="mt-3 flex items-center justify-center">
                 <motion.div
                   initial={{ scale: 0.6, rotate: -8 }}
@@ -45,25 +47,25 @@ export function BadgeUnlockModal({ badge, onClose }) {
                 >
                   <Avatar name={badge.crest} color={badge.type === 'squad' ? 'navy' : 'oxblood'} size={64} />
                   <span aria-hidden className="font-display absolute -right-3 -top-3 grid h-9 w-9 place-items-center bg-jersey text-ink text-[14px] font-black skew-stamp-r" style={{ borderRadius: '50%' }}>
-                    NEW
+                    {t('modal.new')}
                   </span>
                 </motion.div>
               </div>
               <div className="mt-3 text-center">
-                <div className="font-display text-[26px] font-black leading-none">{badge.name}</div>
+                <div className="font-display text-[26px] font-black leading-none">{t(`ach.${badge.id}.name`)}</div>
                 <div className="font-mono mt-1 text-[10px] tracking-[0.18em] uppercase opacity-70">
-                  {badge.type === 'squad' ? 'Squad badge' : 'Personal badge'}
+                  {badge.type === 'squad' ? t('modal.kind.squad') : t('modal.kind.personal')}
                 </div>
-                <div className="mt-3 text-[13px] leading-snug text-ink/80">{badge.description}</div>
+                <div className="mt-3 text-[13px] leading-snug text-ink/80">{t(`ach.${badge.id}.desc`)}</div>
               </div>
               <button
                 onClick={onClose}
                 className="font-display stamp-press mt-5 w-full border-2 border-ink bg-oxblood py-2 text-[13px] font-black uppercase tracking-[0.12em] text-cream"
                 style={{ borderRadius: '3px' }}
               >
-                STAMP IT IN
+                {t('modal.cta')}
               </button>
-              <div className="font-mono mt-2 text-center text-[9px] tracking-[0.18em] text-ink/40">UNLOCK · {new Date().toLocaleDateString()}</div>
+              <div className="font-mono mt-2 text-center text-[9px] tracking-[0.18em] text-ink/40">{t('modal.unlockDate', { date: new Date().toLocaleDateString() })}</div>
             </div>
           </motion.div>
         </motion.div>

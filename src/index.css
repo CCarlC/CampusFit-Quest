@@ -15,10 +15,18 @@
   --color-mint: #5BA88A;
   --color-bruise: #6B4A6E;
 
-  /* Font stacks */
-  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Big Shoulders Display", "Instrument Sans", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Font stacks — ASCII first (Big Shoulders / Instrument / JetBrains),
+     CJK fallback to Noto Sans SC. Browsers pick the right font per glyph,
+     so codes/numbers stay varsity while Chinese gets proper weight. */
+  --font-sans: "Instrument Sans", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Big Shoulders Display", "Noto Sans SC", "Instrument Sans", sans-serif;
+  --font-mono: "JetBrains Mono", "Noto Sans SC", ui-monospace, monospace;
+}
+
+[data-locale="zh"] {
+  /* In Chinese mode, slightly tighten tracking on Chinese display text
+     since Big Shoulders' negative letter-spacing reads off on CJK. */
+  --display-tracking-cjk: 0.01em;
 }
 
 @layer base {

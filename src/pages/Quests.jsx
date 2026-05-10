@@ -1,30 +1,36 @@
 import { motion } from 'motion/react'
 import { useStore } from '../lib/store.jsx'
+import { useI18n } from '../lib/i18n.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { PageHeader } from '../components/PageHeader.jsx'
 import { VerifyButton } from '../components/VerifyButton.jsx'
 import { Stamp } from '../components/Stamp.jsx'
 
 const TYPE_META = {
-  daily: { label: 'DAILY', color: 'oxblood', accent: '#7B1E1E', dotLabel: 'CORE' },
-  bonus: { label: 'BONUS', color: 'jersey', accent: '#F5C518', dotLabel: 'EXTRA' },
-  social: { label: 'SOCIAL', color: 'navy', accent: '#1B2A4E', dotLabel: 'WITH SQUAD' },
-  challenge: { label: 'CHALLENGE', color: 'bruise', accent: '#6B4A6E', dotLabel: 'HARD' },
-  comeback: { label: 'COMEBACK', color: 'mint', accent: '#5BA88A', dotLabel: 'RETURN' },
+  daily: { color: 'oxblood', accent: '#7B1E1E' },
+  bonus: { color: 'jersey', accent: '#F5C518' },
+  social: { color: 'navy', accent: '#1B2A4E' },
+  challenge: { color: 'bruise', accent: '#6B4A6E' },
+  comeback: { color: 'mint', accent: '#5BA88A' },
 }
 
 export function Quests() {
   const { state, actions } = useStore()
+  const { t } = useI18n()
   const toast = useToast()
   const { quests, user } = state
   const visible = quests.filter((q) => !(q.locked && !user.streakPaused))
 
   const handleVerified = (q) => ({ steps, minutes }) => {
     actions.verifyTask(q.id, { mockSteps: steps, mockMinutes: minutes })
-    const noBadgeNote = q.type === 'comeback' ? ' · NO EXTRA BADGE — BY DESIGN' : ''
+    const tail = q.type === 'comeback' ? t('toast.tail.noBadge') : ''
     toast.push({
-      title: `+${q.xp} XP VERIFIED${noBadgeNote}`,
-      body: `${steps.toLocaleString()} steps · ${minutes} min · ${q.title.toLowerCase()}`,
+      title: t('toast.title.verified', { xp: q.xp, tail }),
+      body: t('toast.body.verifyDetail', {
+        steps: steps.toLocaleString(),
+        minutes,
+        title: t(`q.${q.id}.title`).toLowerCase(),
+      }),
     })
   }
 
@@ -33,20 +39,20 @@ export function Quests() {
   return (
     <main className="flex flex-col">
       <PageHeader
-        section="QUESTS"
-        issue="WK 19"
-        kicker="Five categories, all verified by HealthKit. Pick what fits today."
+        section={t('page.section.quests')}
+        issue={t('quests.issue')}
+        kicker={t('quests.kicker')}
       />
 
       {/* Type filter strip */}
       <div className="no-scrollbar flex gap-2 overflow-x-auto border-b-2 border-ink bg-cream px-4 py-2.5">
-        <Chip active>ALL · {visible.length}</Chip>
+        <Chip active>{t('quests.chip.all', { n: visible.length })}</Chip>
         {Object.entries(TYPE_META).map(([k, v]) => {
           const count = visible.filter((q) => q.type === k).length
           if (count === 0) return null
           return (
             <Chip key={k} dotColor={v.accent}>
-              {v.label} · {count}
+              {t(`quests.type.${k}`)} · {count}
             </Chip>
           )
         })}
@@ -54,10 +60,10 @@ export function Quests() {
 
       {/* Available banner */}
       <div className="flex items-center justify-between border-b-2 border-ink bg-paper px-4 py-2.5">
-        <div className="font-mono text-[10px] tracking-[0.22em] text-ink/60">// AVAILABLE TODAY</div>
+        <div className="font-mono text-[10px] tracking-[0.22em] text-ink/60">{t('quests.available')}</div>
         <div className="font-display flex items-baseline gap-1 text-[14px] font-black">
           <span className="text-oxblood">+{totalAvailableXp}</span>
-          <span className="font-mono text-[10px] tracking-wider text-ink/55">XP UP FOR GRABS</span>
+          <span className="font-mono text-[10px] tracking-wider text-ink/55">{t('quests.upForGrabs')}</span>
         </div>
       </div>
 
@@ -68,8 +74,8 @@ export function Quests() {
 
         {visible.length === 0 && (
           <div className="border-2 border-dashed border-ink/30 px-4 py-8 text-center">
-            <div className="font-display text-[18px] font-black">No quests pending.</div>
-            <p className="mt-1 text-[12px] text-ink/60">Comeback quests unlock if you pause for 3+ days.</p>
+            <div className="font-display text-[18px] font-black">{t('quests.empty.title')}</div>
+            <p className="mt-1 text-[12px] text-ink/60">{t('quests.empty.body')}</p>
           </div>
         )}
 
@@ -96,6 +102,7 @@ function Chip({ children, active = false, dotColor }) {
 }
 
 function QuestCard({ q, index, onVerified }) {
+  const { t } = useI18n()
   const meta = TYPE_META[q.type] || TYPE_META.daily
   const verified = q.verified
 
@@ -110,11 +117,9 @@ function QuestCard({ q, index, onVerified }) {
       ].join(' ')}
       style={{ borderRadius: '4px', boxShadow: verified ? 'none' : '4px 4px 0 0 #0E0B08' }}
     >
-      {/* Side stripe */}
       <div className="absolute inset-y-0 left-0 w-2" style={{ background: meta.accent }} />
 
       <div className="grid grid-cols-[auto_1fr_auto] items-start gap-3 px-3 py-3 pl-5">
-        {/* Code stamp */}
         <div className="flex flex-col items-center gap-1">
           <div
             className="font-display grid h-12 w-12 place-items-center border border-ink/70 bg-paper text-[18px] font-black leading-none"
@@ -122,37 +127,38 @@ function QuestCard({ q, index, onVerified }) {
           >
             {q.code.replace('#', '')}
           </div>
-          <span className="font-mono text-[8.5px] tracking-[0.2em] text-ink/50 uppercase">{q.difficulty}</span>
+          <span className="font-mono text-[8.5px] tracking-[0.2em] text-ink/50 uppercase">
+            {t(`quests.diff.${q.difficulty}`)}
+          </span>
         </div>
 
-        {/* Content */}
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span
               className="font-mono px-1.5 py-0.5 text-[9px] tracking-[0.22em] uppercase"
               style={{ background: meta.accent, color: q.type === 'bonus' || q.type === 'comeback' ? '#0E0B08' : '#F5EDE0' }}
             >
-              {meta.label}
+              {t(`quests.type.${q.type}`)}
             </span>
-            <span className="font-mono text-[9px] tracking-[0.18em] text-ink/55 uppercase truncate">{meta.dotLabel}</span>
+            <span className="font-mono text-[9px] tracking-[0.18em] text-ink/55 uppercase truncate">{t(`quests.dot.${q.type}`)}</span>
           </div>
           <h3 className={['font-display mt-1.5 text-[18px] font-black uppercase leading-tight', verified ? 'line-through decoration-2' : ''].join(' ')}>
-            {q.title}
+            {t(`q.${q.id}.title`)}
           </h3>
-          <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-ink/60">{q.blurb}</p>
+          <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-ink/60">{t(`q.${q.id}.blurb`)}</p>
         </div>
 
-        {/* Reward */}
         <div className="text-right">
-          <div className="font-mono text-[9px] tracking-[0.2em] text-ink/55">REWARD</div>
+          <div className="font-mono text-[9px] tracking-[0.2em] text-ink/55">{t('quests.reward')}</div>
           <div className="font-display text-[24px] font-black leading-none text-oxblood">
             +{q.xp}
           </div>
-          <div className="font-mono text-[9px] tracking-[0.18em] text-ink/55">XP · {q.minutes}m</div>
+          <div className="font-mono text-[9px] tracking-[0.18em] text-ink/55">
+            {t('quests.rewardSuffix', { min: q.minutes })}
+          </div>
         </div>
       </div>
 
-      {/* Action row */}
       <div className="border-t border-ink/15 bg-paper px-3 py-2.5">
         {verified ? (
           <div className="flex items-center justify-between">
@@ -164,9 +170,12 @@ function QuestCard({ q, index, onVerified }) {
                 ✓
               </div>
               <div>
-                <div className="font-display text-[13px] font-black uppercase tracking-wide leading-none">VERIFIED</div>
+                <div className="font-display text-[13px] font-black uppercase tracking-wide leading-none">{t('common.verified')}</div>
                 <div className="font-mono text-[9.5px] tracking-[0.18em] text-ink/55 uppercase">
-                  {q.verifiedSteps?.toLocaleString()} steps · {q.verifiedMinutes} min
+                  {t('quests.verifiedDetail', {
+                    steps: q.verifiedSteps?.toLocaleString() ?? '—',
+                    min: q.verifiedMinutes,
+                  })}
                 </div>
               </div>
             </div>
@@ -181,13 +190,11 @@ function QuestCard({ q, index, onVerified }) {
 }
 
 function Footnote() {
+  const { t } = useI18n()
   return (
     <div className="mt-2 border border-dashed border-ink/30 bg-paper p-3 text-[11.5px] leading-snug text-ink/60">
-      <div className="font-mono mb-1 text-[9.5px] tracking-[0.22em] text-oxblood">// V3 DESIGN NOTE</div>
-      <span>
-        <b>Comeback Quest</b> awards normal XP — <b className="text-ink">no extra badge</b>. We reward
-        the <i>workout</i>, not the act of returning. (Removes the "fake-pause to farm" loop in V1.)
-      </span>
+      <div className="font-mono mb-1 text-[9.5px] tracking-[0.22em] text-oxblood">{t('quests.note.tag')}</div>
+      {t('quests.note.body')}
     </div>
   )
 }

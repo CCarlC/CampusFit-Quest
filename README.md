@@ -14,9 +14,12 @@ npm run dev
 打开 [http://localhost:5173](http://localhost:5173)。状态写入 `localStorage`，刷新不丢。
 
 右下角有一个 `DEMO · ⚙` 浮动控制台：
+- **语言切换**：English / 中文（顶部 masthead 也有同款 EN/中 切换）
 - **01** 走完整 onboarding 流程（重置为新用户）
 - **02** 重置为已激活的 demo 用户（默认状态）
 - **03** 手动触发 "Lily 刚完成今日任务" 推送
+
+中文模式会自动加载 Noto Sans SC，CJK 字符走思源黑，ASCII 数字/任务编号继续走 Big Shoulders。语言偏好持久化在 `localStorage` 的 `campusfit.v3.locale` 键。
 
 ## 5 个页面
 
@@ -55,7 +58,8 @@ src/
 ├── App.jsx              # Shell + 路由 + 推送时序
 ├── lib/
 │   ├── seed.js          # 全部 mock 数据
-│   └── store.jsx        # useReducer + localStorage + 业务规则
+│   ├── store.jsx        # useReducer + localStorage + 业务规则
+│   └── i18n.jsx         # I18nProvider + 中英双语字典 + 持久化
 ├── components/          # 12 个原子组件（Crest / Calendar21 / VerifyButton …）
 └── pages/               # 5 个 Tab + Onboarding
 ```

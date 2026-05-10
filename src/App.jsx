@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { StoreProvider, useStore } from './lib/store.jsx'
+import { I18nProvider, useI18n } from './lib/i18n.jsx'
 import { ToastProvider } from './components/Toast.jsx'
 import { PhoneFrame } from './components/Layout.jsx'
 import { BottomNav } from './components/BottomNav.jsx'
@@ -15,16 +16,19 @@ import { Onboarding } from './pages/Onboarding.jsx'
 
 export default function App() {
   return (
-    <StoreProvider>
-      <ToastProvider>
-        <Shell />
-      </ToastProvider>
-    </StoreProvider>
+    <I18nProvider>
+      <StoreProvider>
+        <ToastProvider>
+          <Shell />
+        </ToastProvider>
+      </StoreProvider>
+    </I18nProvider>
   )
 }
 
 function Shell() {
   const { state, actions } = useStore()
+  const { t } = useI18n()
   const [tab, setTab] = useState('home')
   const [forceOnboarding, setForceOnboarding] = useState(false)
   const [pushVisible, setPushVisible] = useState(null)
@@ -48,15 +52,14 @@ function Shell() {
     if (pushedRef.current) return
     if (tab !== 'home') return
     pushedRef.current = true
-    const t = setTimeout(() => {
-      const next = state.lifecycle?.pushQueue?.[0] || {
-        from: 'Lily', dorm: '304', body: 'just verified · 25 min run', icon: 'LP',
-      }
-      setPushVisible(next)
+    const timer = setTimeout(() => {
+      setPushVisible({
+        from: t('name.lily'), dorm: '304', body: t('push.lily.body'), icon: 'LP',
+      })
       actions.markPushShown()
     }, 6800)
-    return () => clearTimeout(t)
-  }, [inOnboarding, tab, state.lifecycle?.pushQueue, actions])
+    return () => clearTimeout(timer)
+  }, [inOnboarding, tab, actions, t])
 
   if (inOnboarding) {
     return (
@@ -88,7 +91,7 @@ function Shell() {
       />
 
       <DemoConsole
-        onTriggerPush={() => setPushVisible({ from: 'Lily', dorm: '304', body: 'just verified · 25 min run', icon: 'LP' })}
+        onTriggerPush={() => setPushVisible({ from: t('name.lily'), dorm: '304', body: t('push.lily.body'), icon: 'LP' })}
         onJumpToOnboarding={() => setForceOnboarding(true)}
       />
     </PhoneFrame>

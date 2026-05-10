@@ -1,5 +1,6 @@
 import { motion } from 'motion/react'
 import { useStore, xpProgress } from '../lib/store.jsx'
+import { useI18n } from '../lib/i18n.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { PageHeader } from '../components/PageHeader.jsx'
 import { ProgressBar } from '../components/ProgressBar.jsx'
@@ -8,39 +9,39 @@ import { Stamp, Tape } from '../components/Stamp.jsx'
 import { Avatar } from '../components/Avatar.jsx'
 import { Calendar21 } from '../components/Calendar21.jsx'
 
-const COPY = {
-  new: { kicker: 'NEW MEMBER', line: 'Day 1. Pick a quest. We\'ll handle the proof.' },
-  active: { kicker: 'ACTIVE STREAK', line: 'You said you would. The locker room is open.' },
-  comeback: { kicker: 'WELCOME BACK', line: 'Streak is paused, not lost. Easy 10 min today.' },
-}
-
 export function Home({ onNavigate }) {
   const { state, actions } = useStore()
+  const { t } = useI18n()
   const toast = useToast()
   const { user, quests, squad } = state
   const xp = xpProgress(user.xp)
   const mainQuest = quests.find((q) => !q.verified && !q.locked) || quests[0]
-  const copy = COPY[user.status] || COPY.active
+
+  const status = user.status || 'active'
+  const kicker = t(`home.copy.${status}.line`)
+  const kickerTag = t(`home.copy.${status}.kicker`)
 
   const handleVerified = ({ steps, minutes }) => {
     if (!mainQuest) return
     actions.verifyTask(mainQuest.id, { mockSteps: steps, mockMinutes: minutes })
     toast.push({
-      title: `+${mainQuest.xp} XP · STREAK ${user.streak + 1}`,
-      body: `${steps.toLocaleString()} steps · ${minutes} min · ${mainQuest.title.toLowerCase()}`,
+      title: t('toast.title.xpStreak', { xp: mainQuest.xp, streak: user.streak + 1 }),
+      body: t('toast.body.verifyDetail', {
+        steps: steps.toLocaleString(),
+        minutes,
+        title: t(`q.${mainQuest.id}.title`).toLowerCase(),
+      }),
     })
   }
 
-  const squadProgress = squad
-    ? squad.members.reduce((s, m) => s + m.weeklyMinutes, 0) / (squad.weeklyGoalPerHead * squad.members.length)
-    : 0
+  const userName = user.nameKey ? t(`name.${user.nameKey}`) : user.name
 
   return (
     <main className="flex flex-col">
       <PageHeader
-        section="HOME"
+        section={t('page.section.home')}
         issue={`${(state.lifecycle.lastVerifiedTaskId ? '07' : '06')}`}
-        kicker={copy.line}
+        kicker={kicker}
       />
 
       {/* Status block */}
@@ -48,18 +49,22 @@ export function Home({ onNavigate }) {
         <div className="flex items-start justify-between">
           <div>
             <div className="font-mono flex items-center gap-2 text-[9.5px] tracking-[0.22em] text-ink/60">
-              <span>// {copy.kicker}</span>
+              <span>// {kickerTag}</span>
             </div>
             <div className="mt-1 font-display text-[28px] font-black leading-none">
-              HEY, {user.name.toUpperCase()}.
+              {t('home.greeting', { name: userName.toUpperCase() })}
             </div>
             <div className="mt-1 flex items-center gap-2">
-              <Stamp color="oxblood">LV.{user.level}</Stamp>
-              <Tape>STREAK · {user.streak}{user.streakPaused ? ' · PAUSED' : ''}</Tape>
+              <Stamp color="oxblood">{t('home.lvl', { lvl: user.level })}</Stamp>
+              <Tape>
+                {user.streakPaused
+                  ? t('home.streakPaused', { n: user.streak })
+                  : t('home.streak', { n: user.streak })}
+              </Tape>
             </div>
           </div>
           <div className="text-right">
-            <div className="font-mono text-[9.5px] tracking-[0.22em] text-ink/55">XP IN LV</div>
+            <div className="font-mono text-[9.5px] tracking-[0.22em] text-ink/55">{t('home.xpInLv')}</div>
             <div className="font-display text-[32px] font-black leading-none tabular-nums">
               {xp.current}
             </div>
@@ -73,8 +78,8 @@ export function Home({ onNavigate }) {
         {/* 21-day grid */}
         <div className="mt-5">
           <div className="font-mono flex items-center justify-between text-[9.5px] tracking-[0.22em] text-ink/60 uppercase">
-            <span>Last 21 days</span>
-            <span>longest · {user.longestStreak}</span>
+            <span>{t('home.last21')}</span>
+            <span>{t('home.longest', { n: user.longestStreak })}</span>
           </div>
           <div className="mt-2">
             <Calendar21 history={user.streakHistory} todayIndex={20} />
@@ -86,7 +91,7 @@ export function Home({ onNavigate }) {
       <section className="relative border-b-2 border-ink bg-paper px-4 pb-5 pt-5">
         <div className="flex items-center gap-2">
           <span className="h-[2px] flex-1 bg-ink" />
-          <span className="font-mono text-[10px] tracking-[0.3em] text-ink/65">TODAY · MAIN QUEST</span>
+          <span className="font-mono text-[10px] tracking-[0.3em] text-ink/65">{t('home.todayMain')}</span>
           <span className="h-[2px] flex-1 bg-ink" />
         </div>
 
@@ -96,33 +101,33 @@ export function Home({ onNavigate }) {
             style={{ borderRadius: '4px', boxShadow: '5px 5px 0 0 #0E0B08' }}
           >
             <div className="flex items-center justify-between border-b-2 border-ink bg-oxblood px-3 py-1.5 text-cream">
-              <span className="font-mono text-[10px] tracking-[0.22em]">QUEST · {mainQuest.code}</span>
-              <span className="font-mono text-[10px] tracking-[0.22em] uppercase">{mainQuest.type}</span>
+              <span className="font-mono text-[10px] tracking-[0.22em]">{t('home.questHeader.code', { code: mainQuest.code })}</span>
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase">{t(`quests.type.${mainQuest.type}`)}</span>
             </div>
             <div className="px-4 pb-4 pt-3">
               <div className="font-display text-[26px] font-black uppercase leading-[0.95] text-ink">
-                {mainQuest.title}
+                {t(`q.${mainQuest.id}.title`)}
               </div>
-              <p className="mt-2 text-[13px] leading-snug text-ink/70">{mainQuest.blurb}</p>
+              <p className="mt-2 text-[13px] leading-snug text-ink/70">{t(`q.${mainQuest.id}.blurb`)}</p>
 
               <div className="mt-4 grid grid-cols-3 gap-2">
-                <Cell label="MIN" value={mainQuest.minutes} suffix="m" />
-                <Cell label="REWARD" value={`+${mainQuest.xp}`} suffix="xp" />
-                <Cell label="WEEKLY" value={user.weeklyMinutes} suffix={`/${user.weeklyGoal}`} />
+                <Cell label={t('home.cell.min')} value={mainQuest.minutes} suffix={t('home.cell.minSuffix')} />
+                <Cell label={t('home.cell.reward')} value={`+${mainQuest.xp}`} suffix={t('home.cell.xp')} />
+                <Cell label={t('home.cell.weekly')} value={user.weeklyMinutes} suffix={`/${user.weeklyGoal}`} />
               </div>
 
               <div className="mt-4">
                 <VerifyButton taskMinutes={mainQuest.minutes} onVerified={handleVerified} />
                 <div className="font-mono mt-2 text-center text-[9.5px] tracking-[0.18em] text-ink/45">
-                  POWERED BY <span className="text-oxblood">HEALTHKIT</span> · NO SELF-REPORT
+                  {t('home.poweredBy')}
                 </div>
               </div>
             </div>
           </article>
         ) : (
           <div className="mt-3 border-2 border-dashed border-ink/30 p-6 text-center text-ink/60">
-            <div className="font-display text-[18px] font-black">ALL VERIFIED.</div>
-            <p className="mt-1 text-[12px]">Hit the Quests tab for bonus & challenge work.</p>
+            <div className="font-display text-[18px] font-black">{t('home.allDone.title')}</div>
+            <p className="mt-1 text-[12px]">{t('home.allDone.body')}</p>
           </div>
         )}
       </section>
@@ -131,14 +136,14 @@ export function Home({ onNavigate }) {
       <section className="border-b-2 border-ink bg-cream-deep/40 px-4 pb-5 pt-5">
         <div className="flex items-end justify-between">
           <div>
-            <div className="font-mono text-[10px] tracking-[0.22em] text-ink/65">THIS WEEK</div>
+            <div className="font-mono text-[10px] tracking-[0.22em] text-ink/65">{t('home.thisWeek')}</div>
             <div className="font-display text-[22px] font-black leading-none">
               <span className="tabular-nums">{user.weeklyMinutes}</span>{' '}
-              <span className="text-ink/50">/ {user.weeklyGoal} MIN</span>
+              <span className="text-ink/50">/ {user.weeklyGoal} {t('home.cell.min')}</span>
             </div>
           </div>
           <div className="font-mono text-right text-[10px] tracking-[0.18em] text-ink/55">
-            <div>GOAL</div>
+            <div>{t('home.goal')}</div>
             <div className="font-display text-[18px] text-oxblood">
               {Math.round((user.weeklyMinutes / user.weeklyGoal) * 100)}%
             </div>
@@ -153,12 +158,14 @@ export function Home({ onNavigate }) {
       {squad ? (
         <section className="border-b-2 border-ink bg-paper px-4 pb-5 pt-4">
           <div className="flex items-center justify-between">
-            <div className="font-mono text-[10px] tracking-[0.22em] text-ink/60">SQUAD · {squad.name.toUpperCase()}</div>
+            <div className="font-mono text-[10px] tracking-[0.22em] text-ink/60">
+              {t('home.squad.tag', { name: t(`squad.name.${squad.nameKey || 'dorm304'}`).toUpperCase() })}
+            </div>
             <button
               onClick={() => onNavigate('squad')}
               className="font-mono border border-ink px-2 py-0.5 text-[10px] tracking-[0.18em] text-ink hover:bg-ink hover:text-cream"
             >
-              OPEN →
+              {t('common.open')}
             </button>
           </div>
           <div className="mt-3 flex items-center gap-2">
@@ -176,7 +183,7 @@ export function Home({ onNavigate }) {
               </motion.div>
             ))}
             <div className="ml-auto text-right">
-              <div className="font-mono text-[10px] tracking-[0.22em] text-ink/60">WEEKLY</div>
+              <div className="font-mono text-[10px] tracking-[0.22em] text-ink/60">{t('home.squad.weekly')}</div>
               <div className="font-display text-[16px] font-black leading-none">
                 {squad.members.reduce((s, m) => s + m.weeklyMinutes, 0)}<span className="text-ink/50">/{squad.weeklyGoalPerHead * squad.members.length}</span>
               </div>
@@ -195,16 +202,16 @@ export function Home({ onNavigate }) {
         <section className="border-b-2 border-ink bg-paper px-4 pb-5 pt-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-mono text-[10px] tracking-[0.22em] text-ink/60">SOLO MODE</div>
-              <div className="font-display text-[18px] font-black uppercase">No squad yet.</div>
-              <p className="mt-0.5 text-[12px] text-ink/60">Squads unlock high-fives & shared goals — totally optional.</p>
+              <div className="font-mono text-[10px] tracking-[0.22em] text-ink/60">{t('home.solo.tag')}</div>
+              <div className="font-display text-[18px] font-black uppercase">{t('home.solo.title')}</div>
+              <p className="mt-0.5 text-[12px] text-ink/60">{t('home.solo.body')}</p>
             </div>
             <button
               onClick={() => onNavigate('squad')}
               className="font-display stamp-press border-2 border-ink bg-jersey px-3 py-2 text-[12px] font-black uppercase tracking-[0.1em] text-ink"
               style={{ borderRadius: '3px' }}
             >
-              JOIN A SQUAD
+              {t('home.solo.cta')}
             </button>
           </div>
         </section>
@@ -213,7 +220,7 @@ export function Home({ onNavigate }) {
       {/* Footer mark */}
       <section className="px-4 pb-6 pt-5">
         <div className="font-mono text-[9.5px] tracking-[0.24em] text-ink/40 uppercase">
-          // CampusFit Athletic Association · est. 2026 · vol III
+          // {t('brand.assoc')}
         </div>
         <div className="mt-2 h-2 stripe-tape opacity-60" />
       </section>

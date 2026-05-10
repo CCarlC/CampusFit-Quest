@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
+import { useI18n } from '../lib/i18n.jsx'
 
-const STAGES = ['idle', 'reading', 'verified']
-
-const READING_LINES = [
-  'Connecting to HealthKit…',
-  'Reading step count…',
-  'Reading active minutes…',
-  'Cross-checking heart rate…',
-  'Stamping signature…',
+const READING_KEYS = [
+  'verify.line.connect',
+  'verify.line.steps',
+  'verify.line.minutes',
+  'verify.line.heart',
+  'verify.line.stamp',
 ]
 
 // VerifyButton: the differentiating UX moment.
@@ -19,8 +18,9 @@ export function VerifyButton({
   onVerified,
   onReadStart,
   disabled = false,
-  label = 'VERIFY WORKOUT',
+  label, // overrides default i18n label
 }) {
+  const { t } = useI18n()
   const [stage, setStage] = useState('idle')
   const [lineIdx, setLineIdx] = useState(0)
   const [steps, setSteps] = useState(0)
@@ -30,11 +30,10 @@ export function VerifyButton({
     if (stage !== 'idle' || disabled) return
     setStage('reading')
     onReadStart?.()
-    // Cycle reading lines while we wait.
     let i = 0
     const tick = setInterval(() => {
       i += 1
-      setLineIdx(i % READING_LINES.length)
+      setLineIdx(i % READING_KEYS.length)
     }, 320)
     setTimeout(() => {
       clearInterval(tick)
@@ -43,7 +42,6 @@ export function VerifyButton({
       setSteps(generatedSteps)
       setMinutes(generatedMinutes)
       setStage('verified')
-      // Bubble up after a beat so the user reads the result.
       setTimeout(() => {
         onVerified?.({ steps: generatedSteps, minutes: generatedMinutes })
       }, 700)
@@ -51,6 +49,7 @@ export function VerifyButton({
   }
 
   const isCompact = variant === 'compact'
+  const ctaLabel = label || t('verify.cta')
 
   return (
     <div className={isCompact ? 'w-full' : 'w-full'}>
@@ -75,7 +74,7 @@ export function VerifyButton({
           >
             <span className="relative z-[1] flex items-center justify-center gap-2">
               <span aria-hidden className="font-mono text-[11px]">▶</span>
-              {label}
+              {ctaLabel}
             </span>
             <span className="halftone pointer-events-none absolute inset-0 text-jersey-deep opacity-30" />
           </motion.button>
@@ -96,8 +95,8 @@ export function VerifyButton({
             <Spinner />
             <div className="min-w-0 flex-1 leading-tight">
               <div className="font-display flex items-center gap-2 text-[14px] font-black uppercase tracking-[0.1em]">
-                <span className="text-jersey">HEALTHKIT</span>
-                <span className="font-mono text-[10px] opacity-60">READ</span>
+                <span className="text-jersey">{t('verify.healthkit')}</span>
+                <span className="font-mono text-[10px] opacity-60">{t('verify.read')}</span>
               </div>
               <AnimatePresence mode="wait">
                 <motion.div
@@ -108,7 +107,7 @@ export function VerifyButton({
                   className="font-mono truncate text-[11px] tracking-wide opacity-80"
                   transition={{ duration: 0.18 }}
                 >
-                  {READING_LINES[lineIdx]}
+                  {t(READING_KEYS[lineIdx])}
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -135,13 +134,13 @@ export function VerifyButton({
             </div>
             <div className="min-w-0 flex-1 leading-tight">
               <div className="font-display flex items-center gap-2 text-[14px] font-black uppercase tracking-[0.1em]">
-                <span>VERIFIED</span>
-                <span className="font-mono text-[10px] opacity-70">HEALTHKIT</span>
+                <span>{t('common.verified')}</span>
+                <span className="font-mono text-[10px] opacity-70">{t('verify.healthkit')}</span>
               </div>
               <div className="font-mono mt-0.5 flex items-center gap-3 text-[11px] tracking-wide">
-                <span><b className="font-bold tabular-nums">{steps.toLocaleString()}</b> steps</span>
+                <span><b className="font-bold tabular-nums">{steps.toLocaleString()}</b> {t('verify.steps')}</span>
                 <span className="opacity-60">·</span>
-                <span><b className="font-bold tabular-nums">{minutes}</b> min</span>
+                <span><b className="font-bold tabular-nums">{minutes}</b> {t('verify.minutes')}</span>
               </div>
             </div>
           </motion.div>

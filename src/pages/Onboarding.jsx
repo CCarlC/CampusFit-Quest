@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useStore } from '../lib/store.jsx'
+import { useI18n } from '../lib/i18n.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { VerifyButton } from '../components/VerifyButton.jsx'
 import { Stamp, Tape } from '../components/Stamp.jsx'
@@ -8,24 +9,21 @@ import { Avatar } from '../components/Avatar.jsx'
 import { Crest } from '../components/Crest.jsx'
 import { demoSquad } from '../lib/seed.js'
 
-const GOALS = [
-  { id: 'lean', label: 'LEAN OUT', sub: 'Cut · cardio-leaning weeks', glyph: 'L' },
-  { id: 'build', label: 'BUILD', sub: 'Strength · 3-4× per wk', glyph: 'B' },
-  { id: 'destress', label: 'DESTRESS', sub: 'Mobility · short, often', glyph: 'D' },
-  { id: 'maintain', label: 'MAINTAIN', sub: 'Stay where you are', glyph: 'M' },
+const GOAL_IDS = [
+  { id: 'lean', glyph: 'L' },
+  { id: 'build', glyph: 'B' },
+  { id: 'destress', glyph: 'D' },
+  { id: 'maintain', glyph: 'M' },
 ]
 
 const PHASES = ['intro', 'goal', 'invite', 'first-quest', 'verify-done']
 
 export function Onboarding({ onDone }) {
   const { state, actions } = useStore()
+  const { t, locale, toggleLocale } = useI18n()
   const toast = useToast()
   const [phase, setPhase] = useState('intro')
   const [goal, setGoal] = useState(null)
-  const [phone, setPhone] = useState('+1 415 ')
-  const [stepStartedAt] = useState(Date.now())
-
-  const elapsed = Math.round((Date.now() - stepStartedAt) / 1000)
 
   function next(to) { setPhase(to) }
 
@@ -48,8 +46,8 @@ export function Onboarding({ onDone }) {
     const firstQuest = state.quests[0] || { id: 'q-onboard-walk' }
     actions.verifyTask(firstQuest.id, { mockSteps: steps, mockMinutes: minutes })
     toast.push({
-      title: '+50 XP · STREAK 1',
-      body: `${steps.toLocaleString()} steps · ${minutes} min · first verify`,
+      title: t('toast.title.firstVerify'),
+      body: t('toast.body.firstVerify', { steps: steps.toLocaleString(), minutes }),
     })
     next('verify-done')
   }
@@ -64,8 +62,16 @@ export function Onboarding({ onDone }) {
       {/* Top hairline */}
       <div className="font-mono flex items-center justify-between border-b border-ink/15 bg-paper px-4 py-2 text-[10px] tracking-[0.18em] uppercase text-ink/55">
         <span>9:41</span>
-        <span className="flex items-center gap-1.5"><span className="inline-block h-1.5 w-1.5 bg-mint" style={{ borderRadius: '50%' }} />ONBOARDING</span>
-        <span>EST. 2026</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block h-1.5 w-1.5 bg-mint" style={{ borderRadius: '50%' }} />{t('chrome.onboarding')}</span>
+        <button
+          onClick={toggleLocale}
+          className="font-mono inline-flex items-center gap-0.5 border border-ink/30 bg-paper px-1 py-0.5 text-[8.5px] tracking-[0.16em] text-ink/70 hover:bg-ink hover:text-jersey"
+          style={{ borderRadius: '2px' }}
+        >
+          <span className={locale === 'en' ? 'text-oxblood font-bold' : 'opacity-50'}>EN</span>
+          <span className="opacity-30">/</span>
+          <span className={locale === 'zh' ? 'text-oxblood font-bold' : 'opacity-50'}>中</span>
+        </button>
       </div>
 
       {/* Progress strip */}
@@ -85,6 +91,7 @@ export function Onboarding({ onDone }) {
 }
 
 function ProgressStrip({ phase }) {
+  const { t } = useI18n()
   const idx = PHASES.indexOf(phase)
   return (
     <div className="border-b-2 border-ink bg-cream-deep/50 px-4 py-2">
@@ -99,7 +106,7 @@ function ProgressStrip({ phase }) {
           />
         ))}
         <span className="font-mono ml-2 text-[10px] tracking-[0.22em] text-ink/55 uppercase">
-          STEP {Math.min(idx + 1, 3)} / 3
+          {t('onb.progress.step', { n: Math.min(idx + 1, 3) })}
         </span>
       </div>
     </div>
@@ -121,20 +128,19 @@ function StepShell({ children }) {
 }
 
 function IntroStep({ onStart }) {
+  const { t } = useI18n()
   return (
     <StepShell>
-      <div className="font-mono text-[10px] tracking-[0.22em] text-ink/55">// CAMPUSFIT QUEST · DORM 304</div>
+      <div className="font-mono text-[10px] tracking-[0.22em] text-ink/55">{t('onb.intro.tag')}</div>
       <h1 className="font-display mt-2 text-[44px] font-black uppercase leading-[0.9] tracking-[-0.01em] text-oxblood">
-        Move your body.<br />Get the<br />stamp.
+        {t('onb.intro.headlineA')}<br />{t('onb.intro.headlineB')}<br />{t('onb.intro.headlineC')}
       </h1>
-      <p className="mt-3 text-[14px] leading-snug text-ink/70">
-        Daily quests, verified by HealthKit. No screenshots. No self-report. Squads optional.
-      </p>
+      <p className="mt-3 text-[14px] leading-snug text-ink/70">{t('onb.intro.body')}</p>
 
       <div className="mt-6 grid grid-cols-3 gap-2">
-        <Pill k="3" v="STEP SETUP" />
-        <Pill k="≤90s" v="TIME TO TASK 1" />
-        <Pill k="0" v="SELF-REPORT" />
+        <Pill k={t('onb.intro.pill1k')} v={t('onb.intro.pill1v')} />
+        <Pill k={t('onb.intro.pill2k')} v={t('onb.intro.pill2v')} />
+        <Pill k={t('onb.intro.pill3k')} v={t('onb.intro.pill3v')} />
       </div>
 
       <div className="mt-6 flex-1">
@@ -144,14 +150,14 @@ function IntroStep({ onStart }) {
         >
           <div className="halftone absolute inset-0 text-oxblood opacity-[0.06]" />
           <div className="font-mono relative flex items-center justify-between text-[10px] tracking-[0.22em] text-ink/55 uppercase">
-            <span>// SAMPLE QUEST</span>
-            <span>#01</span>
+            <span>{t('onb.intro.sample.tag')}</span>
+            <span>{t('onb.intro.sample.code')}</span>
           </div>
           <div className="font-display relative mt-1 text-[24px] font-black uppercase">
-            Walk 1500 steps
+            {t('onb.intro.sample.title')}
           </div>
           <div className="font-mono relative mt-1 text-[11px] tracking-wide text-ink/65">
-            HealthKit reads, we stamp it. +50 XP.
+            {t('onb.intro.sample.body')}
           </div>
         </div>
       </div>
@@ -162,10 +168,10 @@ function IntroStep({ onStart }) {
           className="font-display stamp-press relative w-full overflow-hidden border-2 border-ink bg-jersey px-4 py-3.5 text-[18px] font-black uppercase tracking-[0.08em] text-ink"
           style={{ borderRadius: '3px' }}
         >
-          ENROLL — 90 SECONDS
+          {t('onb.intro.cta')}
         </button>
         <p className="font-mono mt-2 text-center text-[9.5px] tracking-[0.18em] text-ink/45 uppercase">
-          // Phone number · 1 goal · 1 squad pick (skippable)
+          {t('onb.intro.note')}
         </p>
       </div>
     </StepShell>
@@ -182,18 +188,17 @@ function Pill({ k, v }) {
 }
 
 function GoalStep({ goal, setGoal, onContinue }) {
+  const { t } = useI18n()
   return (
     <StepShell>
-      <div className="font-mono text-[10px] tracking-[0.22em] text-ink/55">// STEP 02 · ONE PICK</div>
+      <div className="font-mono text-[10px] tracking-[0.22em] text-ink/55">{t('onb.goal.tag')}</div>
       <h1 className="font-display mt-2 text-[36px] font-black uppercase leading-[0.92] text-ink">
-        What are you here for?
+        {t('onb.goal.title')}
       </h1>
-      <p className="mt-2 text-[13px] leading-snug text-ink/65">
-        Single answer. We'll route quests around it. We <i>don't</i> ask preferred sports yet — that's day 7.
-      </p>
+      <p className="mt-2 text-[13px] leading-snug text-ink/65">{t('onb.goal.body')}</p>
 
       <div className="mt-5 grid grid-cols-2 gap-2.5">
-        {GOALS.map((g) => {
+        {GOAL_IDS.map((g) => {
           const active = goal === g.id
           return (
             <button
@@ -209,9 +214,9 @@ function GoalStep({ goal, setGoal, onContinue }) {
                 {g.glyph}
               </div>
               <div>
-                <div className="font-display text-[16px] font-black uppercase leading-none">{g.label}</div>
+                <div className="font-display text-[16px] font-black uppercase leading-none">{t(`onb.goal.${g.id}.l`)}</div>
                 <div className={['font-mono mt-0.5 text-[9.5px] tracking-[0.18em] uppercase', active ? 'text-cream/75' : 'text-ink/55'].join(' ')}>
-                  {g.sub}
+                  {t(`onb.goal.${g.id}.s`)}
                 </div>
               </div>
             </button>
@@ -226,7 +231,7 @@ function GoalStep({ goal, setGoal, onContinue }) {
           className="font-display stamp-press w-full border-2 border-ink bg-jersey px-4 py-3 text-[16px] font-black uppercase tracking-[0.08em] text-ink disabled:opacity-40"
           style={{ borderRadius: '3px' }}
         >
-          CONTINUE →
+          {t('common.continue')}
         </button>
       </div>
     </StepShell>
@@ -234,39 +239,37 @@ function GoalStep({ goal, setGoal, onContinue }) {
 }
 
 function InviteStep({ onPick }) {
+  const { t } = useI18n()
   return (
     <StepShell>
-      <div className="font-mono text-[10px] tracking-[0.22em] text-ink/55">// STEP 03 · OPTIONAL</div>
+      <div className="font-mono text-[10px] tracking-[0.22em] text-ink/55">{t('onb.invite.tag')}</div>
       <h1 className="font-display mt-2 text-[34px] font-black uppercase leading-[0.92]">
-        Roll with a squad?
+        {t('onb.invite.title')}
       </h1>
-      <p className="mt-2 text-[13px] leading-snug text-ink/65">
-        Squads add high-fives & shared goals. They're <b className="text-oxblood">never</b> a gate —
-        every feature works solo.
-      </p>
+      <p className="mt-2 text-[13px] leading-snug text-ink/65">{t('onb.invite.body')}</p>
 
       <div className="mt-5 grid gap-3">
         <Card
           onClick={() => onPick('squad')}
-          tag="DEMO"
+          tag={t('common.demoTag')}
           glyph={<Crest members={demoSquad().members.map((m) => ({ avatar: m.avatar, color: m.color }))} size={64} />}
-          title="Join Dorm 304 Crew"
-          sub="Lily · Rohan · Mia + you · 4 of 6"
+          title={t('onb.invite.squad.title')}
+          sub={t('onb.invite.squad.sub')}
           accent="oxblood"
         />
         <Card
           onClick={() => onPick('solo')}
-          tag="SOLO"
+          tag={t('common.solo')}
           glyph={<Avatar name="ME" color="ink" size={56} />}
-          title="Train alone for now"
-          sub="Pick this up later from Squad tab."
+          title={t('onb.invite.solo.title')}
+          sub={t('onb.invite.solo.sub')}
           accent="cream"
         />
       </div>
 
       <div className="mt-auto pt-5">
         <p className="font-mono text-center text-[9.5px] tracking-[0.18em] text-ink/40 uppercase">
-          // We don't ask for weekly day-count yet · default 3, you can tune later
+          {t('onb.invite.note')}
         </p>
       </div>
     </StepShell>
@@ -295,42 +298,39 @@ function Card({ onClick, tag, glyph, title, sub, accent }) {
 }
 
 function FirstQuestStep({ onVerified }) {
+  const { t } = useI18n()
   return (
     <StepShell>
       <div className="font-mono flex items-center justify-between text-[10px] tracking-[0.22em] text-ink/55 uppercase">
-        <span>// FIRST QUEST · ON YOUR LOCKER</span>
-        <Tape>FRESH</Tape>
+        <span>{t('onb.first.tag')}</span>
+        <Tape>{t('common.fresh')}</Tape>
       </div>
 
       <h1 className="font-display mt-3 text-[28px] font-black uppercase leading-[0.95]">
-        Pin this one in.
+        {t('onb.first.title')}
       </h1>
-      <p className="mt-1.5 text-[13px] leading-snug text-ink/65">
-        Your first quest is a deliberately easy walk. Verifying it unlocks <b>First Sweat</b>.
-      </p>
+      <p className="mt-1.5 text-[13px] leading-snug text-ink/65">{t('onb.first.body')}</p>
 
       <div
         className="relative mt-5 overflow-hidden border-2 border-ink bg-cream"
         style={{ borderRadius: '4px', boxShadow: '5px 5px 0 0 #0E0B08' }}
       >
         <div className="flex items-center justify-between border-b-2 border-ink bg-oxblood px-3 py-1.5 text-cream">
-          <span className="font-mono text-[10px] tracking-[0.22em]">QUEST · #01</span>
-          <span className="font-mono text-[10px] tracking-[0.22em]">DAILY · EASY</span>
+          <span className="font-mono text-[10px] tracking-[0.22em]">{t('onb.first.code')}</span>
+          <span className="font-mono text-[10px] tracking-[0.22em]">{t('onb.first.tag2')}</span>
         </div>
         <div className="px-4 pb-4 pt-3">
-          <div className="font-display text-[28px] font-black uppercase leading-[0.95]">Walk 1500 steps</div>
-          <p className="mt-1.5 text-[12px] text-ink/65 leading-snug">
-            12 minutes outdoors. HealthKit will count it for you. We stamp it after.
-          </p>
+          <div className="font-display text-[28px] font-black uppercase leading-[0.95]">{t('onb.first.questTitle')}</div>
+          <p className="mt-1.5 text-[12px] text-ink/65 leading-snug">{t('onb.first.questBody')}</p>
           <div className="mt-3 grid grid-cols-3 gap-2">
-            <Mini label="MIN" value="12" />
-            <Mini label="REWARD" value="+50" />
-            <Mini label="UNLOCKS" value="FS" />
+            <Mini label={t('onb.first.mini.min')} value="12" />
+            <Mini label={t('onb.first.mini.reward')} value="+50" />
+            <Mini label={t('onb.first.mini.unlocks')} value="FS" />
           </div>
           <div className="mt-4">
             <VerifyButton taskMinutes={12} onVerified={onVerified} />
             <div className="font-mono mt-2 text-center text-[9.5px] tracking-[0.18em] text-ink/45 uppercase">
-              demo · the read takes 1.5 sec
+              {t('onb.first.demoNote')}
             </div>
           </div>
         </div>
@@ -338,7 +338,7 @@ function FirstQuestStep({ onVerified }) {
 
       <div className="mt-auto pt-4">
         <p className="font-mono text-center text-[9.5px] tracking-[0.18em] text-ink/40 uppercase">
-          // first-task verify is the keystone moment — V3 calls this out
+          {t('onb.first.note')}
         </p>
       </div>
     </StepShell>
@@ -355,11 +355,12 @@ function Mini({ label, value }) {
 }
 
 function DoneStep({ onEnter }) {
+  const { t } = useI18n()
   return (
     <StepShell>
       <div className="font-mono flex items-center justify-between text-[10px] tracking-[0.22em] text-oxblood uppercase">
-        <span>// SETUP COMPLETE</span>
-        <Stamp>UNDER 90s</Stamp>
+        <span>{t('onb.done.tag')}</span>
+        <Stamp>{t('onb.done.under90')}</Stamp>
       </div>
 
       <div
@@ -370,22 +371,20 @@ function DoneStep({ onEnter }) {
         <div className="relative flex items-center gap-3">
           <Avatar name="FS" color="oxblood" size={64} />
           <div>
-            <div className="font-mono text-[9.5px] tracking-[0.22em] text-ink/55 uppercase">PERSONAL BADGE</div>
-            <div className="font-display text-[26px] font-black uppercase leading-none">First Sweat</div>
-            <div className="font-mono mt-0.5 text-[10px] tracking-wide text-ink/55 uppercase">UNLOCKED — KEEP GOING</div>
+            <div className="font-mono text-[9.5px] tracking-[0.22em] text-ink/55 uppercase">{t('onb.done.badgeKind')}</div>
+            <div className="font-display text-[26px] font-black uppercase leading-none">{t('onb.done.badgeName')}</div>
+            <div className="font-mono mt-0.5 text-[10px] tracking-wide text-ink/55 uppercase">{t('onb.done.badgeStatus')}</div>
           </div>
         </div>
 
         <div className="relative mt-5 grid grid-cols-3 gap-2">
-          <Mini label="XP" value="+50" />
-          <Mini label="STREAK" value="1" />
-          <Mini label="TOMORROW" value="+1" />
+          <Mini label={t('onb.done.mini.xp')} value="+50" />
+          <Mini label={t('onb.done.mini.streak')} value="1" />
+          <Mini label={t('onb.done.mini.tomorrow')} value="+1" />
         </div>
       </div>
 
-      <p className="mt-5 text-[13px] leading-snug text-ink/65">
-        Tomorrow we surface a new quest at 9am — and a push if your squad lights up first.
-      </p>
+      <p className="mt-5 text-[13px] leading-snug text-ink/65">{t('onb.done.body')}</p>
 
       <div className="mt-auto pt-5">
         <button
@@ -393,7 +392,7 @@ function DoneStep({ onEnter }) {
           className="font-display stamp-press w-full border-2 border-ink bg-oxblood px-4 py-3.5 text-[18px] font-black uppercase tracking-[0.08em] text-cream"
           style={{ borderRadius: '3px' }}
         >
-          ENTER THE LOCKER →
+          {t('onb.done.cta')}
         </button>
       </div>
     </StepShell>
